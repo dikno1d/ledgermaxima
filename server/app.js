@@ -124,7 +124,7 @@ app.delete('/api/users/:username', authMiddleware, adminMiddleware, permMiddlewa
 
 // ─── MONEY ROUTES ───
 
-app.post('/api/money', authMiddleware, permMiddleware('canManageMoney'), async (req, res) => {
+app.post('/api/money', authMiddleware, async (req, res) => {
   const { amount, date, note } = req.body;
   if (!amount || !date) return res.status(400).json({ error: 'Amount and date required' });
   const db = await getDb();
