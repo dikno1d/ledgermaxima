@@ -52,6 +52,7 @@ async function checkPermission(username, permission) {
 
 function permMiddleware(permission) {
   return async (req, res, next) => {
+    if (req.user.role === 'admin') return next();
     const ok = await checkPermission(req.user.username, permission);
     if (!ok) return res.status(403).json({ error: 'Access denied' });
     next();
@@ -107,7 +108,7 @@ app.put('/api/users/:username/role', authMiddleware, adminMiddleware, mainAdminM
   const db = await getDb();
   await db.collection('users').updateOne({ username }, { $set: { role } });
   if (role === 'admin') {
-    await db.collection('permissions').updateOne({ username }, { $set: { canManageMoney: true, canManageIdeas: true } });
+    await db.collection('permissions').updateOne({ username }, { $set: { canManageMoney: true, canManageIdeas: true, canManageAllocations: true, canManageUsers: true } }, { upsert: true });
   }
   res.json({ success: true });
 });
