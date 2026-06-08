@@ -8,16 +8,16 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
-  <div class="ambient-glow ambient-cyan"></div>
-  <div class="ambient-glow ambient-magenta"></div>
+  <div class="ambient-glow ambient-green"></div>
+  <div class="ambient-glow ambient-blue"></div>
   <div class="ambient-glow ambient-purple"></div>
   <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <h1 class="text-xl md:text-2xl font-bold gradient-text neon-glow" data-text="TexlMaxima">TexlMaxima <span class="text-[0.5em] align-middle text-slate-500 font-normal typing-cursor" style="animation: cursorBlink 1s step-end infinite;">_</span></h1>
+      <h1 class="text-xl md:text-2xl font-bold gradient-text">TexlMaxima</h1>
       <div class="flex items-center gap-2 md:gap-3">
         <span id="userNameDisplay" class="text-slate-300 text-sm hidden md:inline"></span>
-        <a href="/admin.html" id="adminLink" class="hidden px-3 py-1.5 text-xs border border-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/10 transition-all">Admin</a>
-        <button onclick="logout()" class="px-3 py-1.5 text-xs border border-white/5 text-slate-400 rounded-lg hover:bg-white/5 transition-all">Logout</button>
+        <a href="/admin.html" id="adminLink" class="hidden px-3 py-1.5 text-xs text-slate-400 bg-white/[0.03] rounded-lg hover:bg-white/[0.06] transition-all">Admin</a>
+        <button onclick="logout()" class="px-3 py-1.5 text-xs text-slate-500 bg-white/[0.02] rounded-lg hover:bg-white/[0.05] transition-all">Logout</button>
       </div>
     </div>
   </nav>
@@ -25,7 +25,7 @@
   <main class="max-w-7xl mx-auto px-4 py-6">
     <!-- Tabs -->
     <div class="flex gap-1 mb-6 border-b border-white/10 overflow-x-auto custom-scrollbar">
-      <button class="tab-btn active px-4 py-2.5 text-sm font-medium text-cyan-300 border-b-2 border-cyan-400 whitespace-nowrap transition-all" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn active px-4 py-2.5 text-sm font-medium text-emerald-300 border-b-2 border-emerald-400 whitespace-nowrap transition-all" data-tab="dashboard">Dashboard</button>
       <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap transition-all" data-tab="entries">All Entries</button>
       <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap transition-all" data-tab="allocations">Allocations</button>
     </div>
@@ -33,43 +33,41 @@
     <!-- Tab: Dashboard -->
     <div id="tab-dashboard" class="tab-content space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <div class="stat-card border border-cyan-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(0,240,255,0.05), rgba(0,102,255,0.03));">
-          <span class="stat-icon neon-glow">₹</span>
-          <div class="stat-glow" style="background: radial-gradient(circle, rgba(0,240,255,0.08) 0%, transparent 70%);"></div>
-          <p class="text-cyan-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Total Collected</p>
-          <p id="totalMoney" class="text-2xl md:text-4xl font-bold neon-glow mt-1" style="color: var(--neon-cyan);">₹0</p>
+        <div class="stat-card p-4 md:p-5" style="background: linear-gradient(135deg, rgba(5,150,105,0.06), rgba(16,185,129,0.03)); border-color: rgba(5,150,105,0.08);">
+          <span class="stat-icon" style="opacity: 0.12;">₹</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 70%);"></div>
+          <p class="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider">Total Collected</p>
+          <p id="totalMoney" class="text-2xl md:text-4xl font-bold mt-1" style="color: var(--emerald);">₹0</p>
         </div>
-        <div class="stat-card border border-green-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(0,255,65,0.05), rgba(0,200,50,0.03));">
-          <span class="stat-icon neon-glow">📋</span>
-          <div class="stat-glow" style="background: radial-gradient(circle, rgba(0,255,65,0.08) 0%, transparent 70%);"></div>
-          <p class="text-green-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Entries</p>
-          <p id="entryCount" class="text-2xl md:text-4xl font-bold mt-1" style="color: var(--neon-green); text-shadow: 0 0 20px rgba(0,255,65,0.3);">0</p>
+        <div class="stat-card p-4 md:p-5" style="background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(6,182,212,0.03)); border-color: rgba(59,130,246,0.08);">
+          <span class="stat-icon" style="opacity: 0.12;">📋</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);"></div>
+          <p class="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider">Entries</p>
+          <p id="entryCount" class="text-2xl md:text-4xl font-bold mt-1" style="color: var(--blue);">0</p>
         </div>
-        <div class="stat-card border border-purple-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(138,43,226,0.05), rgba(255,0,255,0.03));">
-          <span class="stat-icon neon-glow-purple">💡</span>
-          <div class="stat-glow" style="background: radial-gradient(circle, rgba(138,43,226,0.08) 0%, transparent 70%);"></div>
-          <p class="text-purple-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Ideas</p>
-          <p id="ideaCount" class="text-2xl md:text-4xl font-bold mt-1 neon-glow-purple" style="color: var(--neon-purple);">0</p>
+        <div class="stat-card p-4 md:p-5" style="background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(168,85,247,0.03)); border-color: rgba(139,92,246,0.08);">
+          <span class="stat-icon" style="opacity: 0.12;">💡</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);"></div>
+          <p class="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider">Ideas</p>
+          <p id="ideaCount" class="text-2xl md:text-4xl font-bold mt-1" style="color: var(--purple);">0</p>
         </div>
-        <div class="stat-card border border-pink-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(255,0,128,0.05), rgba(255,0,255,0.03));">
-          <span class="stat-icon neon-glow-pink">👥</span>
-          <div class="stat-glow" style="background: radial-gradient(circle, rgba(255,0,128,0.08) 0%, transparent 70%);"></div>
-          <p class="text-pink-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Members</p>
-          <p id="userCount" class="text-2xl md:text-4xl font-bold mt-1 neon-glow-pink" style="color: var(--neon-pink);">0</p>
+        <div class="stat-card p-4 md:p-5" style="background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(251,191,36,0.03)); border-color: rgba(245,158,11,0.08);">
+          <span class="stat-icon" style="opacity: 0.12;">👥</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%);"></div>
+          <p class="text-slate-500 text-[10px] md:text-xs uppercase tracking-wider">Members</p>
+          <p id="userCount" class="text-2xl md:text-4xl font-bold mt-1" style="color: var(--amber);">0</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
           <h3 class="text-base md:text-lg font-semibold mb-4">Allocation <span class="em-text">Overview</span></h3>
-          <div class="neon-border p-0.5 rounded-2xl">
-            <div class="relative w-full max-w-xs mx-auto aspect-square bg-[#0a0a0f] rounded-2xl">
-              <canvas id="pieChart"></canvas>
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div class="text-center">
-                  <p class="text-xl md:text-2xl font-bold neon-glow" id="chartTotal" style="color: var(--neon-cyan);">₹0</p>
-                  <p class="text-[10px] text-slate-500">Total</p>
-                </div>
+          <div class="relative w-full max-w-xs mx-auto aspect-square">
+            <canvas id="pieChart"></canvas>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="text-center">
+                <p class="text-xl md:text-2xl font-bold" id="chartTotal" style="color: var(--emerald);">₹0</p>
+                <p class="text-[10px] text-slate-500">Total</p>
               </div>
             </div>
           </div>
@@ -99,7 +97,7 @@
               </div>
               <p class="text-xs text-slate-500">Added by: <span id="moneyAddByName" class="text-amber-400">you</span></p>
               <button type="submit"
-                class="w-full py-2.5 btn-neon rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] text-sm">
+                class="w-full py-2.5 btn-primary rounded-xl transition-all duration-300 text-sm">
                 Add Entry
               </button>
             </form>
@@ -112,7 +110,7 @@
               <input type="text" id="ideaTitle" placeholder="Your idea..." required
                 class="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-purple-400/50 transition-all text-sm">
               <button type="submit"
-                class="px-4 py-2 btn-neon btn-neon-purple font-medium rounded-xl transition-all text-sm whitespace-nowrap">
+                class="px-4 py-2 btn-primary btn-blue font-medium rounded-xl transition-all text-sm whitespace-nowrap">
                 Propose
               </button>
             </form>

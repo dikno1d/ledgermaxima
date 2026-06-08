@@ -5,12 +5,14 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "dev": "node server/server.js",
+    "vercel-build": "echo \"Build complete\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": { "node": "18.x" },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

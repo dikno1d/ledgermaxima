@@ -8,12 +8,12 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
-  <div class="ambient-glow ambient-cyan"></div>
-  <div class="ambient-glow ambient-magenta"></div>
+  <div class="ambient-glow ambient-green"></div>
+  <div class="ambient-glow ambient-blue"></div>
   <div class="ambient-glow ambient-purple"></div>
   <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <h1 class="text-xl md:text-2xl font-bold gradient-text neon-glow">Admin <span class="em-text">Panel</span></h1>
+      <h1 class="text-xl md:text-2xl font-bold gradient-text">Admin <span class="em-text">Panel</span></h1>
       <div class="flex items-center gap-2">
         <a href="/" class="px-3 py-1.5 text-xs bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 transition-all">Dashboard</a>
         <button onclick="logout()" class="px-3 py-1.5 text-xs bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 transition-all">Logout</button>
@@ -26,7 +26,7 @@
 
     <!-- Tabs -->
     <div class="flex gap-1 mb-6 border-b border-white/10 overflow-x-auto custom-scrollbar">
-      <button class="tab-btn active px-4 py-2.5 text-sm font-medium text-cyan-300 border-b-2 border-cyan-400 whitespace-nowrap" data-tab="accounts">Accounts</button>
+      <button class="tab-btn active px-4 py-2.5 text-sm font-medium text-emerald-300 border-b-2 border-emerald-400 whitespace-nowrap" data-tab="accounts">Accounts</button>
       <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap" data-tab="allocations">Allocations</button>
       <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap" data-tab="permissions">Permissions</button>
     </div>
@@ -57,7 +57,7 @@
               Make this user an admin
             </label>
             <button type="submit"
-              class="w-full py-2.5 btn-neon font-semibold rounded-xl transition-all duration-300 text-sm">
+              class="w-full py-2.5 btn-primary font-semibold rounded-xl transition-all duration-300 text-sm">
               Create Account
             </button>
           </form>
@@ -98,7 +98,7 @@
             </div>
           </div>
           <button type="submit"
-            class="w-full py-2.5 btn-neon btn-neon-purple font-semibold rounded-xl transition-all duration-300 text-sm">
+            class="w-full py-2.5 btn-primary btn-purple font-semibold rounded-xl transition-all duration-300 text-sm">
             Add Allocation
           </button>
         </form>
