@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TexlMaxima - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
+  <div class="ambient-glow ambient-cyan"></div>
+  <div class="ambient-glow ambient-magenta"></div>
+  <div class="ambient-glow ambient-purple"></div>
+  <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-bold gradient-text neon-glow" data-text="TexlMaxima">TexlMaxima <span class="text-[0.5em] align-middle text-slate-500 font-normal typing-cursor" style="animation: cursorBlink 1s step-end infinite;">_</span></h1>
+      <div class="flex items-center gap-2 md:gap-3">
+        <span id="userNameDisplay" class="text-slate-300 text-sm hidden md:inline"></span>
+        <a href="/admin.html" id="adminLink" class="hidden px-3 py-1.5 text-xs border border-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/10 transition-all">Admin</a>
+        <button onclick="logout()" class="px-3 py-1.5 text-xs border border-white/5 text-slate-400 rounded-lg hover:bg-white/5 transition-all">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 border-b border-white/10 overflow-x-auto custom-scrollbar">
+      <button class="tab-btn active px-4 py-2.5 text-sm font-medium text-cyan-300 border-b-2 border-cyan-400 whitespace-nowrap transition-all" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap transition-all" data-tab="entries">All Entries</button>
+      <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap transition-all" data-tab="allocations">Allocations</button>
+    </div>
+
+    <!-- Tab: Dashboard -->
+    <div id="tab-dashboard" class="tab-content space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div class="stat-card border border-cyan-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(0,240,255,0.05), rgba(0,102,255,0.03));">
+          <span class="stat-icon neon-glow">₹</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(0,240,255,0.08) 0%, transparent 70%);"></div>
+          <p class="text-cyan-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Total Collected</p>
+          <p id="totalMoney" class="text-2xl md:text-4xl font-bold neon-glow mt-1" style="color: var(--neon-cyan);">₹0</p>
+        </div>
+        <div class="stat-card border border-green-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(0,255,65,0.05), rgba(0,200,50,0.03));">
+          <span class="stat-icon neon-glow">📋</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(0,255,65,0.08) 0%, transparent 70%);"></div>
+          <p class="text-green-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Entries</p>
+          <p id="entryCount" class="text-2xl md:text-4xl font-bold mt-1" style="color: var(--neon-green); text-shadow: 0 0 20px rgba(0,255,65,0.3);">0</p>
+        </div>
+        <div class="stat-card border border-purple-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(138,43,226,0.05), rgba(255,0,255,0.03));">
+          <span class="stat-icon neon-glow-purple">💡</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(138,43,226,0.08) 0%, transparent 70%);"></div>
+          <p class="text-purple-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Ideas</p>
+          <p id="ideaCount" class="text-2xl md:text-4xl font-bold mt-1 neon-glow-purple" style="color: var(--neon-purple);">0</p>
+        </div>
+        <div class="stat-card border border-pink-500/10 p-4 md:p-5" style="background: linear-gradient(135deg, rgba(255,0,128,0.05), rgba(255,0,255,0.03));">
+          <span class="stat-icon neon-glow-pink">👥</span>
+          <div class="stat-glow" style="background: radial-gradient(circle, rgba(255,0,128,0.08) 0%, transparent 70%);"></div>
+          <p class="text-pink-300/60 text-[10px] md:text-xs uppercase tracking-wider font-mono">Members</p>
+          <p id="userCount" class="text-2xl md:text-4xl font-bold mt-1 neon-glow-pink" style="color: var(--neon-pink);">0</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+          <h3 class="text-base md:text-lg font-semibold mb-4">Allocation <span class="em-text">Overview</span></h3>
+          <div class="neon-border p-0.5 rounded-2xl">
+            <div class="relative w-full max-w-xs mx-auto aspect-square bg-[#0a0a0f] rounded-2xl">
+              <canvas id="pieChart"></canvas>
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="text-center">
+                  <p class="text-xl md:text-2xl font-bold neon-glow" id="chartTotal" style="color: var(--neon-cyan);">₹0</p>
+                  <p class="text-[10px] text-slate-500">Total</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="chartLegend" class="flex flex-wrap justify-center gap-2 mt-3"></div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+            <h3 class="text-base md:text-lg font-semibold mb-4">Add <span class="em-text">Money</span></h3>
+            <form id="moneyForm" class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-slate-400 text-xs mb-1">Amount (₹)</label>
+                  <input type="number" id="amount" required min="1" step="0.01" placeholder="0"
+                    class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+                </div>
+                <div>
+                  <label class="block text-slate-400 text-xs mb-1">Date</label>
+                  <input type="date" id="date" required
+                    class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-400/50 transition-all text-sm [color-scheme:dark]">
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-400 text-xs mb-1">Note (optional)</label>
+                <input type="text" id="note" placeholder="What is this for?"
+                  class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+              </div>
+              <p class="text-xs text-slate-500">Added by: <span id="moneyAddByName" class="text-amber-400">you</span></p>
+              <button type="submit"
+                class="w-full py-2.5 btn-neon rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] text-sm">
+                Add Entry
+              </button>
+            </form>
+            <div id="moneySuccess" class="hidden mt-3 text-emerald-400 text-sm text-center"></div>
+          </div>
+
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+            <h3 class="text-base md:text-lg font-semibold mb-4">Quick <span class="em-text">Ideas</span></h3>
+            <form id="ideaForm" class="flex gap-2 mb-3">
+              <input type="text" id="ideaTitle" placeholder="Your idea..." required
+                class="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-purple-400/50 transition-all text-sm">
+              <button type="submit"
+                class="px-4 py-2 btn-neon btn-neon-purple font-medium rounded-xl transition-all text-sm whitespace-nowrap">
+                Propose
+              </button>
+            </form>
+            <div id="ideasList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+              <div class="text-center text-slate-600 py-6 text-sm">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+        <h3 class="text-base md:text-lg font-semibold mb-4">Recent <span class="em-text">Entries</span></h3>
+        <div id="recentEntries" class="space-y-2">
+          <div class="text-center text-slate-600 py-6 text-sm">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: All Entries -->
+    <div id="tab-entries" class="tab-content hidden space-y-4">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 class="text-base md:text-lg font-semibold">All <span class="em-text">Money Entries</span></h3>
+          <div class="flex gap-2">
+            <input type="text" id="entrySearch" placeholder="Search..."
+               class="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm w-40">
+            <select id="entryFilter"
+              class="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+              <option value="all" class="bg-slate-800">All</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-slate-500 text-xs uppercase border-b border-white/10">
+                <th class="text-left py-3 px-2 font-medium">#</th>
+                <th class="text-left py-3 px-2 font-medium">Amount</th>
+                <th class="text-left py-3 px-2 font-medium">Added By</th>
+                <th class="text-left py-3 px-2 font-medium">Date</th>
+                <th class="text-left py-3 px-2 font-medium hidden md:table-cell">Note</th>
+              </tr>
+            </thead>
+            <tbody id="entriesTableBody">
+              <tr><td colspan="5" class="text-center text-slate-600 py-8 text-sm">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="entriesTotal" class="text-right text-xs text-slate-500 mt-3"></p>
+      </div>
+    </div>
+
+    <!-- Tab: Allocations -->
+    <div id="tab-allocations" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+          <h3 class="text-base md:text-lg font-semibold mb-4">Allocation <span class="em-text">Breakdown</span></h3>
+          <div class="space-y-3" id="allocationsChartSection">
+            <div class="relative w-full max-w-xs mx-auto aspect-square">
+              <canvas id="allocPieChart"></canvas>
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="text-center">
+                  <p class="text-xl md:text-2xl font-bold text-amber-300" id="allocChartTotal">₹0</p>
+                  <p class="text-[10px] text-slate-500">Allocated</p>
+                </div>
+              </div>
+            </div>
+            <div id="allocChartLegend" class="flex flex-wrap justify-center gap-2"></div>
+          </div>
+        </div>
+        <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+          <h3 class="text-base md:text-lg font-semibold mb-4">Allocation <span class="em-text">Bars</span></h3>
+          <div id="barChartContainer" class="space-y-3">
+            <div class="text-center text-slate-600 py-6 text-sm">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/chart.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

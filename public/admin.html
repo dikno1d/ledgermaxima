@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TexlMaxima - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
+  <div class="ambient-glow ambient-cyan"></div>
+  <div class="ambient-glow ambient-magenta"></div>
+  <div class="ambient-glow ambient-purple"></div>
+  <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-bold gradient-text neon-glow">Admin <span class="em-text">Panel</span></h1>
+      <div class="flex items-center gap-2">
+        <a href="/" class="px-3 py-1.5 text-xs bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 transition-all">Dashboard</a>
+        <button onclick="logout()" class="px-3 py-1.5 text-xs bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 transition-all">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div id="adminAlert" class="hidden px-4 py-3 rounded-xl text-sm"></div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 border-b border-white/10 overflow-x-auto custom-scrollbar">
+      <button class="tab-btn active px-4 py-2.5 text-sm font-medium text-cyan-300 border-b-2 border-cyan-400 whitespace-nowrap" data-tab="accounts">Accounts</button>
+      <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap" data-tab="allocations">Allocations</button>
+      <button class="tab-btn px-4 py-2.5 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-200 whitespace-nowrap" data-tab="permissions">Permissions</button>
+    </div>
+
+    <!-- Tab: Accounts -->
+    <div id="tab-accounts" class="tab-content space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+          <h3 class="text-base md:text-lg font-semibold mb-4">Create <span class="em-text">Account</span></h3>
+          <form id="createUserForm" class="space-y-4">
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Full Name</label>
+              <input type="text" id="newName" required
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Username</label>
+              <input type="text" id="newUsername" required
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Password</label>
+              <input type="password" id="newPassword" required
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+            </div>
+            <label class="flex items-center gap-2 text-sm text-slate-400">
+              <input type="checkbox" id="newIsAdmin" class="accent-amber-500">
+              Make this user an admin
+            </label>
+            <button type="submit"
+              class="w-full py-2.5 btn-neon font-semibold rounded-xl transition-all duration-300 text-sm">
+              Create Account
+            </button>
+          </form>
+          <div id="createSuccess" class="hidden mt-3 text-emerald-400 text-sm text-center"></div>
+        </div>
+
+        <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+          <h3 class="text-base md:text-lg font-semibold mb-4">All <span class="em-text">Users</span></h3>
+          <div id="usersList" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+            <div class="text-center text-slate-600 py-4 text-sm">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Allocations -->
+    <div id="tab-allocations" class="tab-content hidden space-y-6">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+        <h3 class="text-base md:text-lg font-semibold mb-4">Manage <span class="em-text">Allocations</span></h3>
+        <p class="text-xs text-slate-500 mb-4">Allocations show how the collected money is being used/spent across different purposes.</p>
+        <form id="allocForm" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Name</label>
+              <input type="text" id="allocName" required placeholder="e.g. Venue"
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Percentage (%)</label>
+              <input type="number" id="allocPercentage" required min="0" max="100" step="0.1" placeholder="25"
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+              <p id="allocCalcAmount" class="text-[10px] text-slate-500 mt-1">= ₹0 of total</p>
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Description</label>
+              <input type="text" id="allocDescription" placeholder="Optional"
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+            </div>
+          </div>
+          <button type="submit"
+            class="w-full py-2.5 btn-neon btn-neon-purple font-semibold rounded-xl transition-all duration-300 text-sm">
+            Add Allocation
+          </button>
+        </form>
+        <div id="allocSuccess" class="hidden mt-3 text-emerald-400 text-sm text-center"></div>
+        <div id="allocationsList" class="mt-4 space-y-2"></div>
+      </div>
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-red-500/20">
+        <h3 class="text-base md:text-lg font-semibold text-red-400 mb-2"><span class="em-text">Danger</span> Zone</h3>
+        <p class="text-xs text-slate-500 mb-4">Delete all money entries, ideas, allocations, and non-admin permissions. Admin accounts are preserved.</p>
+        <button onclick="clearAllData()" class="px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-xl transition-all text-sm font-medium">
+          Clear All Data
+        </button>
+        <div id="clearSuccess" class="hidden mt-3 text-emerald-400 text-sm"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Permissions -->
+    <div id="tab-permissions" class="tab-content hidden space-y-6">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/10">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base md:text-lg font-semibold">User <span class="em-text">Permissions</span></h3>
+          <span class="text-[10px] text-slate-500 bg-white/[0.03] px-2 py-1 rounded">Main admin only</span>
+        </div>
+        <div id="permissionsList" class="space-y-3">
+          <div class="text-center text-slate-600 py-4 text-sm">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function getToken() { return localStorage.getItem('token'); }
+    function getUser() { return JSON.parse(localStorage.getItem('user') || '{}'); }
+    function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+    async function api(path, options = {}) {
+      const token = getToken();
+      if (!token) { window.location.href = '/login.html'; return; }
+      const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers };
+      const res = await fetch(path, { ...options, headers });
+      if (res.status === 401) { logout(); return null; }
+      return res;
+    }
+
+    function showAlert(msg, type) {
+      const el = document.getElementById('adminAlert');
+      el.textContent = msg;
+      el.className = type === 'success'
+        ? 'bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 px-4 py-3 rounded-xl text-sm'
+        : 'bg-red-500/20 border border-red-400/30 text-red-300 px-4 py-3 rounded-xl text-sm';
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = getUser();
+      if (user.role !== 'admin') {
+        showAlert('Admin only');
+        setTimeout(() => window.location.href = '/', 1500);
+        return;
+      }
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('text-amber-300', 'border-amber-400');
+            b.classList.add('text-slate-400', 'border-transparent');
+          });
+          btn.classList.remove('text-slate-400', 'border-transparent');
+          btn.classList.add('text-amber-300', 'border-amber-400');
+          document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+          const tab = document.getElementById('tab-' + btn.dataset.tab);
+          if (tab) tab.classList.remove('hidden');
+          if (btn.dataset.tab === 'permissions' && user.username === 'admin') loadPermissions();
+        });
+      });
+
+      await Promise.all([loadUsers(), loadAllocations()]);
+      if (user.username === 'admin') loadPermissions();
+    });
+
+    // Create User
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('newName').value.trim();
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newPassword').value;
+      const isAdmin = document.getElementById('newIsAdmin').checked;
+      const res = await api('/api/users', {
+        method: 'POST',
+        body: JSON.stringify({ name, username, password, role: isAdmin ? 'admin' : 'user' })
+      });
+      const data = await res.json();
+      if (!res.ok) { showAlert(data.error || 'Failed'); return; }
+      document.getElementById('createSuccess').textContent = `Account "${name}" created!`;
+      document.getElementById('createSuccess').classList.remove('hidden');
+      document.getElementById('createUserForm').reset();
+      setTimeout(() => document.getElementById('createSuccess').classList.add('hidden'), 3000);
+      loadUsers();
+    });
+
+    async function loadUsers() {
+      const res = await api('/api/users');
+      if (!res) return;
+      const users = await res.json();
+      const container = document.getElementById('usersList');
+      if (users.length === 0) { container.innerHTML = '<div class="text-center text-slate-600 py-4 text-sm">No users.</div>'; return; }
+      container.innerHTML = users.map(u => `
+        <div class="flex items-center justify-between bg-white/[0.03] rounded-xl px-4 py-3 border border-white/5 fade-in">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xs font-bold text-slate-900">${u.name.charAt(0).toUpperCase()}</div>
+            <div>
+              <p class="text-sm font-medium">${u.name}</p>
+              <p class="text-xs text-slate-500">@${u.username} \u2022 ${u.role} ${u.username === 'admin' ? '\u{1F451}' : ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${u.username !== 'admin' ? `
+              <button onclick="toggleUserRole('${u.username}','${u.role === 'admin' ? 'user' : 'admin'}')" class="text-[10px] px-2 py-1 rounded ${u.role === 'admin' ? 'text-purple-400 hover:bg-purple-500/10' : 'text-slate-500 hover:bg-white/5'} transition-all">${u.role === 'admin' ? 'Admin' : 'User'}</button>
+              <button onclick="deleteUser('${u.username}')" class="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-all">Delete</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleUserRole(username, newRole) {
+      const res = await api(`/api/users/${username}/role`, { method: 'PUT', body: JSON.stringify({ role: newRole }) });
+      if (res?.ok) { showAlert(`User ${username} is now ${newRole}`, 'success'); loadUsers(); }
+    }
+
+    async function deleteUser(username) {
+      if (!confirm(`Delete "${username}"?`)) return;
+      const res = await api(`/api/users/${username}`, { method: 'DELETE' });
+      if (res?.ok) { showAlert(`User deleted`, 'success'); loadUsers(); loadPermissions(); }
+    }
+
+    // Allocations
+    document.getElementById('allocForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('allocName').value.trim();
+      const percentage = document.getElementById('allocPercentage').value;
+      const description = document.getElementById('allocDescription').value.trim();
+      const res = await api('/api/allocations', {
+        method: 'POST',
+        body: JSON.stringify({ name, percentage: Number(percentage), description })
+      });
+      const data = await res.json();
+      if (!res.ok) { showAlert(data.error || 'Failed'); return; }
+      document.getElementById('allocSuccess').textContent = `Allocation "${name}" added!`;
+      document.getElementById('allocSuccess').classList.remove('hidden');
+      document.getElementById('allocForm').reset();
+      document.getElementById('allocCalcAmount').textContent = '= ₹0 of total';
+      setTimeout(() => document.getElementById('allocSuccess').classList.add('hidden'), 3000);
+      loadAllocations();
+    });
+
+    document.getElementById('allocPercentage').addEventListener('input', async function() {
+      const res = await api('/api/money/total');
+      if (!res) return;
+      const data = await res.json();
+      const total = data.total || 0;
+      const pct = Number(this.value) || 0;
+      document.getElementById('allocCalcAmount').textContent = `= ₹${(total * pct / 100).toLocaleString()} of ₹${total.toLocaleString()}`;
+    });
+
+    async function loadAllocations() {
+      const res = await api('/api/allocations');
+      if (!res) return;
+      const allocs = await res.json();
+      const container = document.getElementById('allocationsList');
+      if (allocs.length === 0) { container.innerHTML = '<p class="text-slate-600 text-sm text-center py-3">No allocations yet.</p>'; return; }
+      container.innerHTML = allocs.map(a => `
+        <div class="flex items-center justify-between bg-white/[0.03] rounded-xl px-4 py-3 border border-white/5 fade-in">
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-medium">${a.name}</p>
+              <span class="text-emerald-400 text-sm font-semibold">${a.percentage}%</span>
+              <span class="text-xs text-slate-500">(₹${Number(a.amount || 0).toLocaleString()})</span>
+            </div>
+            ${a.description ? `<p class="text-xs text-slate-500 mt-0.5">${a.description}</p>` : ''}
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="editAlloc('${a._id}','${a.name.replace(/'/g, "\\'")}',${a.percentage})" class="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-1 rounded hover:bg-blue-500/10 transition-all">Edit</button>
+            <button onclick="deleteAlloc('${a._id}')" class="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-all">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function editAlloc(id, name, pct) {
+      const newName = prompt('Allocation name:', name);
+      if (!newName) return;
+      const newPct = prompt('Percentage (%):', pct);
+      if (!newPct) return;
+      const res = await api(`/api/allocations/${id}`, { method: 'PUT', body: JSON.stringify({ name: newName, percentage: Number(newPct) }) });
+      if (res?.ok) { showAlert('Allocation updated', 'success'); loadAllocations(); }
+    }
+
+    async function clearAllData() {
+      if (!confirm('Are you sure? This will delete ALL entries, ideas, allocations, and non-admin permissions. Admin accounts are preserved.')) return;
+      if (!confirm('Really sure? This cannot be undone!')) return;
+      const res = await api('/api/admin/clear', { method: 'POST' });
+      const data = await res.json();
+      if (res?.ok) {
+        document.getElementById('clearSuccess').textContent = data.message || 'All data cleared!';
+        document.getElementById('clearSuccess').classList.remove('hidden');
+        setTimeout(() => document.getElementById('clearSuccess').classList.add('hidden'), 4000);
+        loadAllocations();
+      }
+    }
+
+    async function deleteAlloc(id) {
+      if (!confirm('Delete this allocation?')) return;
+      const res = await api(`/api/allocations/${id}`, { method: 'DELETE' });
+      if (res?.ok) { showAlert('Allocation deleted', 'success'); loadAllocations(); }
+    }
+
+    // Permissions
+    async function loadPermissions() {
+      const user = getUser();
+      if (user.username !== 'admin') {
+        document.getElementById('permissionsList').innerHTML = '<div class="text-center text-slate-600 py-4 text-sm">Only main admin can manage permissions.</div>';
+        return;
+      }
+      const res = await api('/api/permissions');
+      if (!res) return;
+      const perms = await res.json();
+      const container = document.getElementById('permissionsList');
+      const fields = [
+        { key: 'canManageMoney', label: 'Manage Money' },
+        { key: 'canManageIdeas', label: 'Manage Ideas' },
+        { key: 'canManageAllocations', label: 'Manage Allocations' },
+        { key: 'canManageUsers', label: 'Manage Users' },
+      ];
+      const sorted = perms.sort((a, b) => a.username === 'admin' ? -1 : b.username === 'admin' ? 1 : 0);
+      container.innerHTML = sorted.map(p => `
+        <div class="flex items-center justify-between bg-white/[0.03] rounded-xl px-4 py-3 border border-white/5 fade-in">
+          <div>
+            <p class="text-sm font-medium">${p.username}</p>
+            <div class="flex gap-2 mt-1 flex-wrap">
+              ${fields.map(f => `
+                <label class="flex items-center gap-1 text-[10px] ${p.username === 'admin' ? 'text-slate-500' : 'text-slate-400 cursor-pointer hover:text-slate-200'} transition-colors">
+                  <input type="checkbox" ${p[f.key] ? 'checked' : ''} ${p.username === 'admin' ? 'disabled' : ''}
+                    onchange="updatePerm('${p.username}','${f.key}',this.checked)"
+                    class="accent-amber-500 w-3 h-3">
+                  ${f.label}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+          ${p.username === 'admin' ? '<span class="text-[10px] text-amber-500 shrink-0">Main Admin</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    async function updatePerm(username, key, value) {
+      const res = await api(`/api/permissions/${username}`, {
+        method: 'PUT',
+        body: JSON.stringify({ [key]: value })
+      });
+      if (!res?.ok) { showAlert('Failed to update permission'); loadPermissions(); }
+    }
+  </script>
+</body>
+</html>
