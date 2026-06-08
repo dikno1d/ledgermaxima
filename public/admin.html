@@ -219,7 +219,11 @@
           <div class="flex items-center gap-2">
             ${u.username !== 'admin' ? `
               <button onclick="toggleUserRole('${u.username}','${u.role === 'admin' ? 'user' : 'admin'}')" class="text-[10px] px-2 py-1 rounded ${u.role === 'admin' ? 'text-purple-400 hover:bg-purple-500/10' : 'text-slate-500 hover:bg-white/5'} transition-all">${u.role === 'admin' ? 'Admin' : 'User'}</button>
+              <button onclick="changePassword('${u.username}')" class="text-[10px] text-amber-400 hover:text-amber-300 px-2 py-1 rounded hover:bg-amber-500/10 transition-all">Password</button>
               <button onclick="deleteUser('${u.username}')" class="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-all">Delete</button>
+            ` : ''}
+            ${u.username === 'admin' ? `
+              <button onclick="changePassword('${u.username}')" class="text-[10px] text-amber-400 hover:text-amber-300 px-2 py-1 rounded hover:bg-amber-500/10 transition-all">Password</button>
             ` : ''}
           </div>
         </div>
@@ -235,6 +239,14 @@
       if (!confirm(`Delete "${username}"?`)) return;
       const res = await api(`/api/users/${username}`, { method: 'DELETE' });
       if (res?.ok) { showAlert(`User deleted`, 'success'); loadUsers(); loadPermissions(); }
+    }
+
+    async function changePassword(username) {
+      const password = prompt(`New password for "${username}":`);
+      if (!password || password.length < 4) { showAlert('Password must be at least 4 characters'); return; }
+      if (!confirm(`Set password for "${username}"?`)) return;
+      const res = await api(`/api/users/${username}/password`, { method: 'PUT', body: JSON.stringify({ password }) });
+      if (res?.ok) showAlert(`Password changed for "${username}"`, 'success');
     }
 
     // Allocations

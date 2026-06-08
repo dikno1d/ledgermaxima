@@ -113,6 +113,16 @@ app.put('/api/users/:username/role', authMiddleware, adminMiddleware, mainAdminM
   res.json({ success: true });
 });
 
+app.put('/api/users/:username/password', authMiddleware, adminMiddleware, mainAdminMiddleware, async (req, res) => {
+  const { username } = req.params;
+  const { password } = req.body;
+  if (!password || password.length < 4) return res.status(400).json({ error: 'Password must be at least 4 characters' });
+  const db = await getDb();
+  const hashed = await bcrypt.hash(password, 10);
+  await db.collection('users').updateOne({ username }, { $set: { password: hashed } });
+  res.json({ success: true });
+});
+
 app.delete('/api/users/:username', authMiddleware, adminMiddleware, permMiddleware('canManageUsers'), async (req, res) => {
   const { username } = req.params;
   if (username === 'admin') return res.status(400).json({ error: 'Cannot delete main admin' });
