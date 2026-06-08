@@ -92,6 +92,7 @@ async function loadRecentEntries() {
     return;
   }
 
+  const isAdmin = currentUser.role === 'admin';
   container.innerHTML = allEntries.slice(0, 10).map(e => {
     const d = new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     return `
@@ -107,6 +108,7 @@ async function loadRecentEntries() {
             ${e.note ? `<span class="text-xs text-slate-500">• ${e.note}</span>` : ''}
           </div>
         </div>
+        ${isAdmin ? `<button onclick="deleteEntry('${e._id}')" class="text-[11px] text-rose-400/50 hover:text-rose-400 transition-colors shrink-0 ml-2">Delete</button>` : ''}
       </div>
     `;
   }).join('');
@@ -149,11 +151,12 @@ async function loadAllEntries() {
   if (search) filtered = filtered.filter(e => e.addedBy.toLowerCase().includes(search) || (e.note || '').toLowerCase().includes(search));
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-600 py-8 text-sm">No entries found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-600 py-8 text-sm">No entries found.</td></tr>';
     if (totalEl) totalEl.textContent = '';
     return;
   }
 
+  const isAdmin = currentUser.role === 'admin';
   const total = filtered.reduce((s, e) => s + Number(e.amount), 0);
   tbody.innerHTML = filtered.map((e, i) => {
     const d = new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -164,6 +167,7 @@ async function loadAllEntries() {
         <td class="py-3 px-2 text-slate-300">${e.addedBy}</td>
         <td class="py-3 px-2 text-slate-400 text-xs">${d}</td>
         <td class="py-3 px-2 text-slate-500 text-xs hidden md:table-cell">${e.note || '—'}</td>
+        <td class="py-3 px-2 text-right">${isAdmin ? `<button onclick="deleteEntry('${e._id}')" class="text-[11px] text-rose-400/60 hover:text-rose-400 transition-colors">Delete</button>` : ''}</td>
       </tr>
     `;
   }).join('');
@@ -242,4 +246,16 @@ function setupEventListeners() {
   const filterEl = document.getElementById('entryFilter');
   if (searchEl) searchEl.addEventListener('input', loadAllEntries);
   if (filterEl) filterEl.addEventListener('change', loadAllEntries);
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  const res = await api(`/api/money/${id}`, { method: 'DELETE' });
+  if (!res) return;
+  const data = await res.json();
+  if (data.success) {
+    allEntries = [];
+    loadAllEntries();
+    loadDashboard();
+  }
 }

@@ -95,7 +95,7 @@ app.post('/api/users', authMiddleware, adminMiddleware, permMiddleware('canManag
   const userRole = role === 'admin' ? 'admin' : 'user';
   const hashed = await bcrypt.hash(password, 10);
   await db.collection('users').insertOne({ username, password: hashed, name, role: userRole, createdBy: req.user.username, createdAt: new Date().toISOString() });
-  await db.collection('permissions').insertOne({ username, canManageMoney: userRole === 'admin', canManageIdeas: true, canManageAllocations: false, canManageUsers: false, canManagePermissions: false });
+  await db.collection('permissions').insertOne({ username, canManageMoney: true, canManageIdeas: true, canManageAllocations: false, canManageUsers: false, canManagePermissions: false });
   res.json({ success: true });
 });
 
@@ -143,7 +143,7 @@ app.get('/api/money/total', authMiddleware, async (req, res) => {
   res.json({ total: r.length > 0 ? r[0].total : 0 });
 });
 
-app.delete('/api/money/:id', authMiddleware, adminMiddleware, permMiddleware('canManageMoney'), async (req, res) => {
+app.delete('/api/money/:id', authMiddleware, adminMiddleware, async (req, res) => {
   const db = await getDb();
   await db.collection('money').deleteOne({ _id: new ObjectId(req.params.id) });
   res.json({ success: true });
