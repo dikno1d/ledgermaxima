@@ -189,15 +189,24 @@ app.get('/api/allocations', authMiddleware, async (req, res) => {
   const allocs = await db.collection('allocations').find().sort({ createdAt: -1 }).toArray();
   const totalMoney = await db.collection('money').aggregate([{ $group: { _id: null, total: { $sum: '$amount' } } }]).toArray();
   const total = totalMoney.length > 0 ? totalMoney[0].total : 0;
-  const withAmounts = allocs.map(a => ({ ...a, percentage: a.percentage || 0, amount: total * (a.percentage || 0) / 100 }));
+  const withAmounts = allocs.map(a => {
+    const amount = total * (a.percentage || 0) / 100;
+    const target = a.targetAmount || 0;
+    return { ...a, percentage: a.percentage || 0, amount, targetAmount: target, goalPercent: target > 0 ? Math.round((amount / target) * 100) : 0 };
+  });
   res.json(withAmounts);
 });
 
 app.post('/api/allocations', authMiddleware, adminMiddleware, permMiddleware('canManageAllocations'), async (req, res) => {
-  const { name, percentage, description } = req.body;
+  const { name, percentage, description, targetAmount } = req.body;
   if (!name || percentage === undefined) return res.status(400).json({ error: 'Name and percentage required' });
+  const newPct = Number(percentage);
+  if (newPct < 0 || newPct > 100) return res.status(400).json({ error: 'Percentage must be between 0 and 100' });
   const db = await getDb();
-  await db.collection('allocations').insertOne({ name, percentage: Number(percentage), description: description || '', createdBy: req.user.username, createdAt: new Date().toISOString() });
+  const existing = await db.collection('allocations').find().toArray();
+  const currentSum = existing.reduce((s, a) => s + (a.percentage || 0), 0);
+  if (currentSum + newPct > 100) return res.status(400).json({ error: `Total allocation would exceed 100%. Remaining: ${(100 - currentSum).toFixed(1)}%` });
+  await db.collection('allocations').insertOne({ name, percentage: newPct, targetAmount: targetAmount ? Number(targetAmount) : 0, description: description || '', createdBy: req.user.username, createdAt: new Date().toISOString() });
   res.json({ success: true });
 });
 
@@ -206,7 +215,15 @@ app.put('/api/allocations/:id', authMiddleware, adminMiddleware, permMiddleware(
   if (req.body.name) update.name = req.body.name;
   if (req.body.percentage !== undefined) update.percentage = Number(req.body.percentage);
   if (req.body.description !== undefined) update.description = req.body.description;
+  if (req.body.targetAmount !== undefined) update.targetAmount = Number(req.body.targetAmount);
   const db = await getDb();
+  if (req.body.percentage !== undefined) {
+    const newPct = Number(req.body.percentage);
+    if (newPct < 0 || newPct > 100) return res.status(400).json({ error: 'Percentage must be between 0 and 100' });
+    const existing = await db.collection('allocations').find({ _id: { $ne: new ObjectId(req.params.id) } }).toArray();
+    const otherSum = existing.reduce((s, a) => s + (a.percentage || 0), 0);
+    if (otherSum + newPct > 100) return res.status(400).json({ error: `Total allocation would exceed 100%. Remaining: ${(100 - otherSum).toFixed(1)}%` });
+  }
   await db.collection('allocations').updateOne({ _id: new ObjectId(req.params.id) }, { $set: update });
   res.json({ success: true });
 });
@@ -214,6 +231,36 @@ app.put('/api/allocations/:id', authMiddleware, adminMiddleware, permMiddleware(
 app.delete('/api/allocations/:id', authMiddleware, adminMiddleware, permMiddleware('canManageAllocations'), async (req, res) => {
   const db = await getDb();
   await db.collection('allocations').deleteOne({ _id: new ObjectId(req.params.id) });
+  await db.collection('allocSpending').deleteMany({ allocationId: req.params.id });
+  res.json({ success: true });
+});
+
+// ─── ALLOCATION SPENDING ROUTES ───
+
+app.post('/api/allocations/spending', authMiddleware, adminMiddleware, permMiddleware('canManageAllocations'), async (req, res) => {
+  const { allocationId, amount, description, date } = req.body;
+  if (!allocationId || !amount || !date) return res.status(400).json({ error: 'Allocation ID, amount, and date required' });
+  const db = await getDb();
+  await db.collection('allocSpending').insertOne({ allocationId, amount: Number(amount), description: description || '', createdBy: req.user.name, date, createdAt: new Date().toISOString() });
+  res.json({ success: true });
+});
+
+app.get('/api/allocations/spending', authMiddleware, async (req, res) => {
+  const db = await getDb();
+  const spending = await db.collection('allocSpending').find().sort({ date: -1, createdAt: -1 }).toArray();
+  res.json(spending);
+});
+
+app.get('/api/allocations/spending/:allocationId', authMiddleware, async (req, res) => {
+  const db = await getDb();
+  const spending = await db.collection('allocSpending').find({ allocationId: req.params.allocationId }).sort({ date: -1, createdAt: -1 }).toArray();
+  const total = spending.reduce((s, e) => s + e.amount, 0);
+  res.json({ spending, total });
+});
+
+app.delete('/api/allocations/spending/:id', authMiddleware, adminMiddleware, permMiddleware('canManageAllocations'), async (req, res) => {
+  const db = await getDb();
+  await db.collection('allocSpending').deleteOne({ _id: new ObjectId(req.params.id) });
   res.json({ success: true });
 });
 
@@ -253,7 +300,11 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
   const totalMoney = await db.collection('money').aggregate([{ $group: { _id: null, total: { $sum: '$amount' } } }]).toArray();
   const total = totalMoney.length > 0 ? totalMoney[0].total : 0;
   const allocations = await db.collection('allocations').find().toArray();
-  const allocsWithAmounts = allocations.map(a => ({ ...a, percentage: a.percentage || 0, amount: total * (a.percentage || 0) / 100 }));
+  const allocsWithAmounts = allocations.map(a => {
+    const amount = total * (a.percentage || 0) / 100;
+    const target = a.targetAmount || 0;
+    return { ...a, percentage: a.percentage || 0, amount, targetAmount: target, goalPercent: target > 0 ? Math.round((amount / target) * 100) : 0 };
+  });
   const allocTotal = allocsWithAmounts.reduce((s, a) => s + a.amount, 0);
   const allocPct = allocsWithAmounts.reduce((s, a) => s + a.percentage, 0);
   const entryCount = await db.collection('money').countDocuments();
@@ -269,6 +320,7 @@ app.post('/api/admin/clear', authMiddleware, adminMiddleware, mainAdminMiddlewar
   await db.collection('money').deleteMany({});
   await db.collection('ideas').deleteMany({});
   await db.collection('allocations').deleteMany({});
+  await db.collection('allocSpending').deleteMany({});
   await db.collection('permissions').deleteMany({ username: { $ne: 'admin' } });
   res.json({ success: true, message: 'All data cleared. Admin accounts preserved.' });
 });

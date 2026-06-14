@@ -46,11 +46,11 @@ function setupTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('text-amber-300', 'border-amber-400');
+        b.classList.remove('text-emerald-300', 'border-emerald-400');
         b.classList.add('text-slate-400', 'border-transparent');
       });
       btn.classList.remove('text-slate-400', 'border-transparent');
-      btn.classList.add('text-amber-300', 'border-amber-400');
+      btn.classList.add('text-emerald-300', 'border-emerald-400');
 
       document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
       const tab = document.getElementById('tab-' + btn.dataset.tab);

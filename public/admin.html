@@ -79,7 +79,7 @@
         <h3 class="text-base md:text-lg font-semibold mb-4">Manage <span class="em-text">Allocations</span></h3>
         <p class="text-xs text-slate-500 mb-4">Allocations show how the collected money is being used/spent across different purposes.</p>
         <form id="allocForm" class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
               <label class="block text-slate-400 text-xs mb-1">Name</label>
               <input type="text" id="allocName" required placeholder="e.g. Venue"
@@ -90,6 +90,13 @@
               <input type="number" id="allocPercentage" required min="0" max="100" step="0.1" placeholder="25"
                 class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
               <p id="allocCalcAmount" class="text-[10px] text-slate-500 mt-1">= ₹0 of total</p>
+              <p id="allocRemaining" class="text-[10px] text-slate-500 mt-1">Remaining: 100%</p>
+            </div>
+            <div>
+              <label class="block text-slate-400 text-xs mb-1">Target Price (₹)</label>
+              <input type="number" id="allocTarget" min="0" step="1" placeholder="e.g. 47000"
+                class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 transition-all text-sm">
+              <p id="allocGoalInfo" class="text-[10px] text-slate-500 mt-1">0% of goal</p>
             </div>
             <div>
               <label class="block text-slate-400 text-xs mb-1">Description</label>
@@ -165,11 +172,11 @@
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('text-amber-300', 'border-amber-400');
+            b.classList.remove('text-emerald-300', 'border-emerald-400');
             b.classList.add('text-slate-400', 'border-transparent');
           });
           btn.classList.remove('text-slate-400', 'border-transparent');
-          btn.classList.add('text-amber-300', 'border-amber-400');
+          btn.classList.add('text-emerald-300', 'border-emerald-400');
           document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
           const tab = document.getElementById('tab-' + btn.dataset.tab);
           if (tab) tab.classList.remove('hidden');
@@ -254,10 +261,19 @@
       e.preventDefault();
       const name = document.getElementById('allocName').value.trim();
       const percentage = document.getElementById('allocPercentage').value;
+      const targetAmount = document.getElementById('allocTarget').value;
       const description = document.getElementById('allocDescription').value.trim();
+      const pct = Number(percentage) || 0;
+      const statsRes = await api('/api/stats');
+      if (statsRes) {
+        const statsData = await statsRes.json();
+        const usedPct = statsData.allocPct || 0;
+        const remaining = 100 - usedPct;
+        if (pct > remaining) { showAlert(`Total would exceed 100%. Remaining: ${remaining.toFixed(1)}%`, 'error'); return; }
+      }
       const res = await api('/api/allocations', {
         method: 'POST',
-        body: JSON.stringify({ name, percentage: Number(percentage), description })
+        body: JSON.stringify({ name, percentage: pct, targetAmount: targetAmount ? Number(targetAmount) : 0, description })
       });
       const data = await res.json();
       if (!res.ok) { showAlert(data.error || 'Failed'); return; }
@@ -265,49 +281,107 @@
       document.getElementById('allocSuccess').classList.remove('hidden');
       document.getElementById('allocForm').reset();
       document.getElementById('allocCalcAmount').textContent = '= ₹0 of total';
+      document.getElementById('allocRemaining').textContent = 'Remaining: 100%';
+      document.getElementById('allocGoalInfo').textContent = '0% of goal';
+      document.getElementById('allocPercentage').classList.remove('border-red-400');
       setTimeout(() => document.getElementById('allocSuccess').classList.add('hidden'), 3000);
       loadAllocations();
     });
 
     document.getElementById('allocPercentage').addEventListener('input', async function() {
-      const res = await api('/api/money/total');
-      if (!res) return;
-      const data = await res.json();
-      const total = data.total || 0;
+      const [moneyRes, statsRes] = await Promise.all([api('/api/money/total'), api('/api/stats')]);
+      if (!moneyRes || !statsRes) return;
+      const moneyData = await moneyRes.json();
+      const statsData = await statsRes.json();
+      const total = moneyData.total || 0;
       const pct = Number(this.value) || 0;
-      document.getElementById('allocCalcAmount').textContent = `= ₹${(total * pct / 100).toLocaleString()} of ₹${total.toLocaleString()}`;
+      const usedPct = statsData.allocPct || 0;
+      const remaining = Math.max(0, 100 - usedPct);
+      this.max = remaining;
+      if (pct > remaining) this.classList.add('border-red-400');
+      else this.classList.remove('border-red-400');
+      const collectedAmount = total * pct / 100;
+      document.getElementById('allocCalcAmount').textContent = `= ₹${collectedAmount.toLocaleString()} of ₹${total.toLocaleString()}`;
+      document.getElementById('allocRemaining').textContent = `Remaining: ${remaining.toFixed(1)}% (max ${remaining.toFixed(1)}%)`;
+      const targetEl = document.getElementById('allocTarget');
+      const targetVal = Number(targetEl.value) || 0;
+      if (targetVal > 0) {
+        const goalPct = Math.round((collectedAmount / targetVal) * 100);
+        document.getElementById('allocGoalInfo').textContent = `${goalPct}% of ₹${targetVal.toLocaleString()} goal`;
+      } else {
+        document.getElementById('allocGoalInfo').textContent = 'No target set';
+      }
+    });
+
+    document.getElementById('allocTarget').addEventListener('input', function() {
+      const event = new Event('input');
+      document.getElementById('allocPercentage').dispatchEvent(event);
     });
 
     async function loadAllocations() {
-      const res = await api('/api/allocations');
-      if (!res) return;
-      const allocs = await res.json();
+      const [allocRes, statsRes] = await Promise.all([api('/api/allocations'), api('/api/stats')]);
+      if (!allocRes) return;
+      const allocs = await allocRes.json();
+      if (statsRes) {
+        const statsData = await statsRes.json();
+        const remaining = Math.max(0, 100 - (statsData.allocPct || 0));
+        document.getElementById('allocRemaining').textContent = `Remaining: ${remaining.toFixed(1)}% (max ${remaining.toFixed(1)}%)`;
+      }
       const container = document.getElementById('allocationsList');
       if (allocs.length === 0) { container.innerHTML = '<p class="text-slate-600 text-sm text-center py-3">No allocations yet.</p>'; return; }
-      container.innerHTML = allocs.map(a => `
-        <div class="flex items-center justify-between bg-white/[0.03] rounded-xl px-4 py-3 border border-white/5 fade-in">
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <p class="text-sm font-medium">${a.name}</p>
-              <span class="text-emerald-400 text-sm font-semibold">${a.percentage}%</span>
-              <span class="text-xs text-slate-500">(₹${Number(a.amount || 0).toLocaleString()})</span>
+      container.innerHTML = allocs.map(a => {
+        const goalPct = a.goalPercent || 0;
+        const target = a.targetAmount || 0;
+        const barColor = goalPct >= 100 ? 'bg-emerald-500' : goalPct > 0 ? 'bg-cyan-500' : 'bg-slate-600';
+        return `
+        <div class="bg-white/[0.03] rounded-xl px-4 py-3 border border-white/5 fade-in">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="text-sm font-medium">${a.name}</p>
+                <span class="text-emerald-400 text-sm font-semibold">${a.percentage}%</span>
+                <span class="text-xs text-slate-500">(₹${Number(a.amount || 0).toLocaleString()})</span>
+              </div>
+              ${a.description ? `<p class="text-xs text-slate-500 mt-0.5">${a.description}</p>` : ''}
             </div>
-            ${a.description ? `<p class="text-xs text-slate-500 mt-0.5">${a.description}</p>` : ''}
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="editAlloc('${a._id}','${a.name.replace(/'/g, "\\'")}',${a.percentage},${target})" class="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-1 rounded hover:bg-blue-500/10 transition-all">Edit</button>
+              <button onclick="deleteAlloc('${a._id}')" class="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-all">Delete</button>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="editAlloc('${a._id}','${a.name.replace(/'/g, "\\'")}',${a.percentage})" class="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-1 rounded hover:bg-blue-500/10 transition-all">Edit</button>
-            <button onclick="deleteAlloc('${a._id}')" class="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-all">Delete</button>
+          ${target > 0 ? `
+          <div class="mt-2 flex items-center gap-2 text-[10px] text-slate-500">
+            <span>Collected: ₹${Number(a.amount || 0).toLocaleString()}</span>
+            <span class="text-slate-600">/</span>
+            <span class="text-slate-300">₹${target.toLocaleString()}</span>
+            <span class="text-slate-600">•</span>
+            <span class="${goalPct >= 100 ? 'text-emerald-400' : 'text-cyan-400'}">${goalPct}% of goal</span>
           </div>
-        </div>
-      `).join('');
+          <div class="mt-1 w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div class="h-full rounded-full ${barColor} transition-all duration-300" style="width:${Math.min(goalPct, 100)}%"></div>
+          </div>` : `
+          <div class="mt-2 text-[10px] text-slate-600">No target price set</div>`}
+        </div>`;
+      }).join('');
     }
 
-    async function editAlloc(id, name, pct) {
+    async function editAlloc(id, name, pct, target) {
       const newName = prompt('Allocation name:', name);
       if (!newName) return;
       const newPct = prompt('Percentage (%):', pct);
       if (!newPct) return;
-      const res = await api(`/api/allocations/${id}`, { method: 'PUT', body: JSON.stringify({ name: newName, percentage: Number(newPct) }) });
+      const newPctNum = Number(newPct);
+      if (newPctNum < 0 || newPctNum > 100) { showAlert('Percentage must be between 0 and 100', 'error'); return; }
+      const newTarget = prompt('Target price (₹):', target || '0');
+      if (newTarget === null) return;
+      const newTargetNum = Number(newTarget) || 0;
+      const statsRes = await api('/api/stats');
+      if (statsRes) {
+        const statsData = await statsRes.json();
+        const otherSum = (statsData.allocPct || 0) - pct;
+        if (otherSum + newPctNum > 100) { showAlert(`Total would exceed 100%. Remaining: ${(100 - otherSum).toFixed(1)}%`, 'error'); return; }
+      }
+      const res = await api(`/api/allocations/${id}`, { method: 'PUT', body: JSON.stringify({ name: newName, percentage: newPctNum, targetAmount: newTargetNum }) });
       if (res?.ok) { showAlert('Allocation updated', 'success'); loadAllocations(); }
     }
 
@@ -328,6 +402,19 @@
       if (!confirm('Delete this allocation?')) return;
       const res = await api(`/api/allocations/${id}`, { method: 'DELETE' });
       if (res?.ok) { showAlert('Allocation deleted', 'success'); loadAllocations(); }
+    }
+
+    async function spendAlloc(allocationId, name) {
+      const amount = prompt(`Spending amount for "${name}":`);
+      if (!amount || Number(amount) <= 0) return;
+      const description = prompt('Description (optional):');
+      const date = prompt('Date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+      if (!date) return;
+      const res = await api('/api/allocations/spending', {
+        method: 'POST',
+        body: JSON.stringify({ allocationId, amount: Number(amount), description: description || '', date })
+      });
+      if (res?.ok) { showAlert(`Spending recorded for "${name}"`, 'success'); loadAllocations(); }
     }
 
     // Permissions

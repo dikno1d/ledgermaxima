@@ -158,15 +158,18 @@ function drawBarChart(containerId, allocations, total) {
 
   const allocSum = allocations.reduce((s, a) => s + a.amount, 0);
   const unalloc = Math.max(0, total - allocSum);
-  const allItems = allocations.map((a, i) => ({ label: a.name, value: a.amount, color: COLORS[i % COLORS.length], pct: total > 0 ? (a.amount / total) * 100 : 0 }));
-  if (unalloc > 0) allItems.push({ label: 'Unallocated', value: unalloc, color: UNALLOC_COLOR, pct: (unalloc / total) * 100 });
+  const allItems = allocations.map((a, i) => ({ label: a.name, value: a.amount, color: COLORS[i % COLORS.length], pct: total > 0 ? (a.amount / total) * 100 : 0, target: a.targetAmount || 0, goalPct: a.goalPercent || 0 }));
+  if (unalloc > 0) allItems.push({ label: 'Unallocated', value: unalloc, color: UNALLOC_COLOR, pct: (unalloc / total) * 100, target: 0, goalPct: 0 });
 
   if (allItems.length === 0) {
     container.innerHTML = '<div class="text-center text-slate-600 py-6 text-sm">No allocations</div>';
     return;
   }
 
-  container.innerHTML = allItems.map(item => `
+  container.innerHTML = allItems.map(item => {
+    const goalPct = item.goalPct;
+    const gbColor = goalPct >= 100 ? 'bg-emerald-500' : goalPct > 0 ? 'bg-cyan-500' : 'bg-slate-600';
+    return `
     <div class="bar-item fade-in">
       <div class="flex justify-between text-xs mb-1">
         <span class="text-slate-300">${item.label}</span>
@@ -177,8 +180,16 @@ function drawBarChart(containerId, allocations, total) {
              style="width: ${Math.min(100, item.pct)}%; background: linear-gradient(90deg, ${item.color[0]}, ${item.color[1]})">
         </div>
       </div>
-    </div>
-  `).join('');
+      ${item.target > 0 ? `
+      <div class="flex justify-between text-[10px] mt-1.5">
+        <span class="text-slate-500">Goal: ₹${item.target.toLocaleString()}</span>
+        <span class="${goalPct >= 100 ? 'text-emerald-400' : 'text-cyan-400'}">${goalPct}% collected</span>
+      </div>
+      <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-700 ease-out ${gbColor}" style="width:${Math.min(goalPct, 100)}%"></div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
 
   requestAnimationFrame(() => {
     container.querySelectorAll('.bar-item').forEach((el, i) => {
